@@ -34,7 +34,7 @@ namespace PersonRegistration.API.Controllers
             return returnOp;
         }
 
-        [Authorize]
+        
         [HttpGet("{id}")]
         public ReturnOperation<PersonDTO> GetById(Guid id)
         {

@@ -45,6 +45,8 @@ namespace PersonRegistration.API
             services.AddTransient<IPersonService, PersonService>();
             services.AddTransient<IPersonRepository, PersonRepository>();
             services.AddTransient<ILoginService, LoginService>();
+            services.AddTransient<IPasswordService, PasswordService>();
+
             services.AddTransient(typeof(IBaseRepository<>), typeof(BaseRepository<>));
 
             //// Repositories Injection

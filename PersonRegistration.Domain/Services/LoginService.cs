@@ -17,12 +17,14 @@ namespace PersonRegistration.Domain.Services
         private IUnitOfWork _unitOfWork;
         private IConfiguration _config;
         private IMapper _mapper;
+        private IPasswordService _passwordService;
 
-        public LoginService(IUnitOfWork unitOfWork, IConfiguration config, IMapper mapper)
+        public LoginService(IUnitOfWork unitOfWork, IConfiguration config, IMapper mapper, IPasswordService passwordService)
         {
             _unitOfWork = unitOfWork;
             _config = config;
             _mapper = mapper;
+            _passwordService = passwordService;
         }
 
         public string Login(PersonDTO person)
@@ -32,7 +34,7 @@ namespace PersonRegistration.Domain.Services
             if (entity == null)
                 throw new Exception("Pessoa não castrada");
 
-            var Validation = ValidationPassword(person.Password, entity.Password);
+            var Validation = _passwordService.ValidationPassword(person.Password, entity.Password);
 
             if (Validation == false)
                 throw new Exception("Senha Errada");
@@ -68,23 +70,6 @@ namespace PersonRegistration.Domain.Services
 
             var encodedToken = new JwtSecurityTokenHandler().WriteToken(token);
             return encodedToken;
-        }
-
-        private bool ValidationPassword(string enteredPassword, string registeredPassword)
-        {
-            if (string.IsNullOrEmpty(registeredPassword))
-                throw new NullReferenceException("Cadastre uma senha.");
-
-            var encodedValue = Encoding.UTF8.GetBytes(enteredPassword);
-            var encryptedPassword = HashAlgorithm.Create("SHA512").ComputeHash(encodedValue);
-
-            var sb = new StringBuilder();
-            foreach (var caractere in encryptedPassword)
-            {
-                sb.Append(caractere.ToString("X2"));
-            }
-
-            return sb.ToString() == registeredPassword;
         }
     }
 }

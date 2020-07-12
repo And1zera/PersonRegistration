@@ -15,11 +15,13 @@ namespace PersonRegistration.Domain.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         protected IMapper _mapper;
+        private IPasswordService _passwordService;
 
-        public PersonService(IUnitOfWork unitOfWork, IMapper mapper)
+        public PersonService(IUnitOfWork unitOfWork, IMapper mapper, IPasswordService passwordService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _passwordService = passwordService;
         }
 
         public PersonDTO Add(PersonDTO dto)
@@ -32,7 +34,7 @@ namespace PersonRegistration.Domain.Services
             entity.Id = Guid.NewGuid();
             entity.CreateAt = DateTime.Now.ToUniversalTime();
             entity.Status = true;
-            entity.Password = EncryptPassword(dto.Password);
+            entity.Password = _passwordService.EncryptPassword(dto.Password);
 
             _unitOfWork.PersonRepository.Add(entity);
             _unitOfWork.commit();
@@ -57,6 +59,8 @@ namespace PersonRegistration.Domain.Services
 
         public PersonDTO GetById(Guid id)
         {
+            _passwordService.PasswordGenerator();
+
             Person entity = _unitOfWork.PersonRepository.GetById(id);
 
             if (entity == null)
@@ -98,35 +102,5 @@ namespace PersonRegistration.Domain.Services
 
             return GetById(entity.Id);
         }
-
-        public string EncryptPassword(string senha)
-        {
-            var encodedValue = Encoding.UTF8.GetBytes(senha);
-            var encryptedPassword = HashAlgorithm.Create("SHA512").ComputeHash(encodedValue);
-
-            var sb = new StringBuilder();
-            foreach (var caracter in encryptedPassword)
-            {
-                sb.Append(caracter.ToString("X2"));
-            }
-
-            return sb.ToString();
-        }
-
-        //public bool VerifyPassword(string senhaDigitada, string senhaCadastrada)
-        //{
-        //    if (string.IsNullOrEmpty(senhaCadastrada))
-        //        throw new NullReferenceException("Insira uma senha para verificação.");
-
-        //    var encryptedPassword = _algorithm.ComputeHash(Encoding.UTF8.GetBytes(senhaDigitada));
-
-        //    var sb = new StringBuilder();
-        //    foreach (var caractere in encryptedPassword)
-        //    {
-        //        sb.Append(caractere.ToString("X2"));
-        //    }
-
-        //    return sb.ToString() == senhaCadastrada;
-        //}
     }
 }
