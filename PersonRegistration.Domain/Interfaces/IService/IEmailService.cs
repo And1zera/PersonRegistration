@@ -5,9 +5,8 @@ using System.Text;
 
 namespace PersonRegistration.Domain.Interfaces.IService
 {
-    public interface ILoginService
+    public interface IEmailService
     {
-        string Login(PersonDTO person);
-        void PasswordRecovery(string personEmail);
+        void sendEmail(EmailDTO email);
     }
 }

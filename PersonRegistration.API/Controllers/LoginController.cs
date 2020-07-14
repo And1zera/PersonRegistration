@@ -36,5 +36,22 @@ namespace PersonRegistration.API.Controllers
             }
             return returnOp;
         }
+
+        [HttpGet("recovery")]
+        public ReturnOperation<string> PasswordRecovery(string email)
+        {
+            ReturnOperation<string> returnOp = new ReturnOperation<string>();
+            try
+            {
+                _loginService.PasswordRecovery(email);
+                returnOp.Mensagens = new List<string>() { "Nova senha enviada para o email: " + email };
+            }
+            catch (Exception ex)
+            {
+                returnOp.Mensagens = new List<string>() { "Não foi possivel Logar", "Erro: " + ex.Message };
+                returnOp.Erro = true;
+            }
+            return returnOp;
+        }
     }
 }

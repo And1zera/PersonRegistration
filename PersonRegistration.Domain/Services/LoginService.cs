@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
+using MailKit.Net.Smtp;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using MimeKit;
 using PersonRegistration.Domain.DTOs;
 using PersonRegistration.Domain.Interfaces.IRepository;
 using PersonRegistration.Domain.Interfaces.IService;
@@ -18,13 +20,15 @@ namespace PersonRegistration.Domain.Services
         private IConfiguration _config;
         private IMapper _mapper;
         private IPasswordService _passwordService;
+        private IEmailService _emailService;
 
-        public LoginService(IUnitOfWork unitOfWork, IConfiguration config, IMapper mapper, IPasswordService passwordService)
+        public LoginService(IUnitOfWork unitOfWork, IConfiguration config, IMapper mapper, IPasswordService passwordService, IEmailService emailService)
         {
             _unitOfWork = unitOfWork;
             _config = config;
             _mapper = mapper;
             _passwordService = passwordService;
+            _emailService = emailService;
         }
 
         public string Login(PersonDTO person)
@@ -70,6 +74,32 @@ namespace PersonRegistration.Domain.Services
 
             var encodedToken = new JwtSecurityTokenHandler().WriteToken(token);
             return encodedToken;
+        }
+
+        public void PasswordRecovery(string personEmail)
+        {
+            var person = _unitOfWork.PersonRepository.FindBy(x => x.Email.ToLower() == personEmail.ToLower());
+
+            if (person == null)
+                throw new Exception("Email não cadatrado no sistema");
+
+            var newPass = _passwordService.PasswordGenerator();
+            var newPassCrypt = _passwordService.EncryptPassword(newPass);
+
+            person.Password = newPassCrypt;
+
+            _unitOfWork.PersonRepository.Update(person);
+            _unitOfWork.commit();
+
+            EmailDTO email = new EmailDTO()
+            {
+                Name = person.Name,
+                Email = person.Email,
+                Subject = "Recuperação de senha",
+                Body = "Sua Nova senha : " + newPass
+            };
+
+            _emailService.sendEmail(email);
         }
     }
 }
