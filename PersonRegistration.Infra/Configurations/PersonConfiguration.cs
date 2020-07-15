@@ -11,7 +11,7 @@ namespace PersonRegistration.Infra.Configurations
             builder.ToTable("Person");
             builder.HasKey(x => x.Id);
             builder.Property(x => x.Name).IsRequired();
-            builder.Property(x => x.Email).IsRequired();
+            builder.HasKey(x => x.Email);
             builder.Property(x => x.Address);
             builder.Property(x => x.City);
             builder.Property(x => x.State);

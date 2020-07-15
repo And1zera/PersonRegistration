@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PersonRegistration.Infra.Data;
 
 namespace PersonRegistration.Infra.Migrations
 {
     [DbContext(typeof(RegisterPersonContext))]
-    partial class RegisterPersonContextModelSnapshot : ModelSnapshot
+    [Migration("20200715172312_Email_hasKey")]
+    partial class Email_hasKey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
