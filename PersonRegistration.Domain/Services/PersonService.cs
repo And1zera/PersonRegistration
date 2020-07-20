@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using PersonRegistration.Domain.DTOs;
+using PersonRegistration.Domain.DTOsValidators;
 using PersonRegistration.Domain.Entities;
 using PersonRegistration.Domain.Interfaces.IRepository;
 using PersonRegistration.Domain.Interfaces.IService;
@@ -29,17 +30,31 @@ namespace PersonRegistration.Domain.Services
             if (dto == null)
                 throw new Exception("not found");
 
-            var entity = _mapper.Map<Person>(dto);
+            var email = _unitOfWork.PersonRepository.FindBy(x => x.Email == dto.Email);
 
-            entity.Id = Guid.NewGuid();
-            entity.CreateAt = DateTime.Now.ToUniversalTime();
-            entity.Status = true;
-            entity.Password = _passwordService.EncryptPassword(dto.Password);
+            if (email != null)
+                throw new Exception("Email já cadastrado");
 
-            _unitOfWork.PersonRepository.Add(entity);
-            _unitOfWork.commit();
+            var validationResult = new PersonDTOValidator().Validate(dto);
 
-            return GetById(entity.Id);
+            if (validationResult.IsValid)
+            {
+                var entity = _mapper.Map<Person>(dto);
+
+                entity.Id = Guid.NewGuid();
+                entity.CreateAt = DateTime.Now.ToUniversalTime();
+                entity.Status = true;
+                entity.Password = _passwordService.EncryptPassword(dto.Password);
+
+                _unitOfWork.PersonRepository.Add(entity);
+                _unitOfWork.commit();
+
+                return GetById(entity.Id);
+            }
+            else
+            {
+                throw new Exception(validationResult.ToString());
+            }          
         }
 
         public void Delete(Guid id)
@@ -59,8 +74,6 @@ namespace PersonRegistration.Domain.Services
 
         public PersonDTO GetById(Guid id)
         {
-            _passwordService.PasswordGenerator();
-
             Person entity = _unitOfWork.PersonRepository.GetById(id);
 
             if (entity == null)
@@ -86,11 +99,20 @@ namespace PersonRegistration.Domain.Services
         public PersonDTO Update(PersonDTO dto)
         {
             if (dto == null)
-                throw new Exception("not found");
+                throw new Exception("not found");            
 
             Person entity = _unitOfWork.PersonRepository.GetById(dto.Id);
 
+            if (entity == null)
+                throw new Exception("pessoa não encontrada");
+
             entity.Name = dto.Name;
+
+            var email = _unitOfWork.PersonRepository.FindBy(e => e.Email == dto.Email);
+
+            if (email != null && dto.Email != entity.Email)
+                throw new Exception("Email ja existente");
+
             entity.Email = dto.Email;
             entity.Address = dto.Address;
             entity.City = dto.City;
